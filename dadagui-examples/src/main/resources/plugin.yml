@@ -1,0 +1,8 @@
+name: DadaGUIExamples
+version: 2.2.0-SNAPSHOT
+main: me.mrbast.dadagui.examples.DadaGuiExamplePlugin
+author: MrBast
+commands:
+  dadagui:
+    description: Opens the DadaGUI demo menu.
+    usage: /dadagui
