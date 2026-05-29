@@ -13,7 +13,7 @@ import java.util.function.ToIntFunction;
  * @param <C> viewer/player type
  * @param <I> item type
  */
-public final class DynamicGui<C, I> implements Gui<C, I> {
+public class DynamicGui<C, I> implements Gui<C, I> {
     private final Function<C, String> titleProvider;
     private final ToIntFunction<C> sizeProvider;
     private final GuiRenderer<C, I> renderer;

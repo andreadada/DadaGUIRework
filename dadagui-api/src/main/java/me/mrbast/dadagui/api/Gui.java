@@ -46,4 +46,22 @@ public interface Gui<C, I> {
      */
     default void onClose(GuiSession<C, I> session) {
     }
+    /**
+     * Defines how the framework should handle runtime state for this GUI.
+     *
+     * @return GUI state scope
+     */
+    default GuiScope scope() {
+        return GuiScope.PER_PLAYER;
+    }
+
+    /**
+     * Logical key used to group shared sessions of the same GUI.
+     *
+     * @return stable shared key for this GUI instance
+     */
+    default String sharedKey() {
+        return getClass().getName() + "@" + Integer.toHexString(System.identityHashCode(this));
+    }
+
 }

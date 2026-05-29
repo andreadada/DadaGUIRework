@@ -1,6 +1,7 @@
 package me.mrbast.dadagui.bukkit;
 
 import me.mrbast.dadagui.api.Gui;
+import me.mrbast.dadagui.api.GuiScope;
 import me.mrbast.dadagui.api.GuiSlot;
 import me.mrbast.dadagui.bukkit.session.BukkitClickContext;
 import me.mrbast.dadagui.bukkit.session.BukkitGuiHolder;
@@ -31,6 +32,7 @@ public final class BukkitGuiManager implements Listener {
     private final Plugin plugin;
     private final BukkitVersionAdapter versionAdapter;
     private final Map<UUID, BukkitGuiSession> sessions = new HashMap<>();
+    private final Map<String, Map<String, Object>> sharedAttributes = new HashMap<>();
     private boolean registered;
 
     public BukkitGuiManager(Plugin plugin) {
@@ -60,7 +62,11 @@ public final class BukkitGuiManager implements Listener {
     }
 
     public BukkitGuiSession open(Player player, Gui<Player, ItemStack> gui) {
-        BukkitGuiSession session = new BukkitGuiSession(this, player, gui);
+        BukkitGuiSession previous = sessions.get(player.getUniqueId());
+        if (previous != null) {
+            sessions.remove(player.getUniqueId());
+        }
+        BukkitGuiSession session = new BukkitGuiSession(this, player, gui, attributesFor(gui));
         String title = versionAdapter.normalizeInventoryTitle(gui.title(player));
         Inventory inventory = Bukkit.createInventory(new BukkitGuiHolder(session), normalizeSize(gui.size(player)), title);
         session.attach(inventory);
@@ -77,6 +83,30 @@ public final class BukkitGuiManager implements Listener {
         }
         render(session);
         session.viewer().updateInventory();
+    }
+
+    public void refreshAll(Gui<Player, ItemStack> gui) {
+        if (gui == null) {
+            return;
+        }
+        String sharedKey = gui.sharedKey();
+        for (BukkitGuiSession session : sessions.values()) {
+            if (session.gui().sharedKey().equals(sharedKey)) {
+                refresh(session);
+            }
+        }
+    }
+
+    private Map<String, Object> attributesFor(Gui<Player, ItemStack> gui) {
+        if (gui.scope() != GuiScope.SHARED) {
+            return new HashMap<>();
+        }
+        Map<String, Object> attributes = sharedAttributes.get(gui.sharedKey());
+        if (attributes == null) {
+            attributes = new HashMap<>();
+            sharedAttributes.put(gui.sharedKey(), attributes);
+        }
+        return attributes;
     }
 
     private void render(BukkitGuiSession session) {
@@ -126,7 +156,21 @@ public final class BukkitGuiManager implements Listener {
         BukkitGuiSession session = sessions.remove(player.getUniqueId());
         if (session != null) {
             session.gui().onClose(session);
+            cleanupSharedAttributes(session.gui());
         }
+    }
+
+    private void cleanupSharedAttributes(Gui<Player, ItemStack> gui) {
+        if (gui.scope() != GuiScope.SHARED) {
+            return;
+        }
+        String sharedKey = gui.sharedKey();
+        for (BukkitGuiSession session : sessions.values()) {
+            if (session.gui().sharedKey().equals(sharedKey)) {
+                return;
+            }
+        }
+        sharedAttributes.remove(sharedKey);
     }
 
     private static int normalizeSize(int requestedSize) {

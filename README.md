@@ -95,6 +95,147 @@ Questo è utile per:
 - ricaricare una GUI dopo un click;
 - riflettere modifiche runtime senza chiudere e riaprire il menu.
 
+
+---
+
+## API dichiarativa consigliata
+
+La nuova API permette di descrivere la GUI con un layout a caratteri, simile al sistema:
+
+```java
+Gui<Player, ItemStack> recipesGui = DadaGui.<Player, ItemStack, String>paginated('x')
+        .title("Pick The Recipe To Craft")
+        .layout(
+                "# # # # # # # # #",
+                "# x x x x x x x #",
+                "# x x x x x x x #",
+                "# # # < # > # # C")
+        .ingredient('#', ingredients.filler(MaterialKey.BLACK_STAINED_GLASS_PANE))
+        .ingredient('<', navigation.previousPage())
+        .ingredient('>', navigation.nextPage())
+        .ingredient('C', navigation.close())
+        .contentProvider(context -> recipeService.getRecipesFor(context.viewer()))
+        .contentRenderer((context, recipe, index) -> ingredients.clickable(
+                MaterialKey.CRAFTING_TABLE,
+                recipe.getName(),
+                click -> recipeService.select(click.viewer(), recipe)))
+        .emptyIngredient(ingredients.display(MaterialKey.GRAY_STAINED_GLASS_PANE, " "))
+        .scope(GuiScope.PER_PLAYER)
+        .pageMode(PageMode.PER_PLAYER)
+        .build();
+```
+
+Significato dei marker:
+
+```text
+# = filler o decorazione
+x = contenuto paginato
+< = pagina precedente
+> = pagina successiva
+C = chiusura GUI
+```
+
+Questa API è la via consigliata perché separa bene le responsabilità:
+
+- il layout descrive la struttura visiva;
+- gli ingredienti descrivono item e comportamento;
+- il content provider fornisce dati runtime;
+- il content renderer trasforma i dati in slot cliccabili;
+- Bukkit rimane confinato nel modulo `dadagui-bukkit`;
+- le versioni Minecraft rimangono isolate negli adapter.
+
+---
+
+## Esempi inclusi
+
+Il modulo `dadagui-examples` contiene quattro esempi pronti:
+
+```text
+/dadagui static   -> GUI statica uguale per tutti
+/dadagui player   -> GUI runtime basata sul player
+/dadagui shared   -> GUI condivisa tra più player
+/dadagui paged    -> GUI paginata stile lista ricette
+```
+
+### GUI statica
+
+```java
+Gui<Player, ItemStack> staticMenu = DadaGui.<Player, ItemStack>staticGui()
+        .title("Main Menu")
+        .layout(
+                "# # # # # # # # #",
+                "# A # B # C # X #",
+                "# # # # # # # # #")
+        .ingredient('#', ingredients.filler(MaterialKey.BLACK_STAINED_GLASS_PANE))
+        .ingredient('A', ingredients.clickable(MaterialKey.DIAMOND, "Profile", click -> {
+            click.viewer().sendMessage("Profile clicked");
+        }))
+        .ingredient('X', navigation.close())
+        .scope(GuiScope.STATIC)
+        .build();
+```
+
+### GUI runtime per player
+
+```java
+Gui<Player, ItemStack> playerGui = DadaGui.<Player, ItemStack>staticGui()
+        .title(player -> "Profile | " + player.getName())
+        .layout(
+                "# # # # # # # # #",
+                "# N # W # R # X #",
+                "# # # # # # # # #")
+        .ingredient('#', ingredients.filler(MaterialKey.GRAY_STAINED_GLASS_PANE))
+        .ingredient('N', ingredients.dynamicSlot(context ->
+                GuiSlot.<Player, ItemStack>builder(
+                        ingredients.stack(MaterialKey.PLAYER_HEAD, 1, context.viewer().getName()))
+                        .build()))
+        .ingredient('R', ingredients.clickable(MaterialKey.ARROW, "Refresh", click -> click.refresh()))
+        .ingredient('X', navigation.close())
+        .scope(GuiScope.PER_PLAYER)
+        .build();
+```
+
+### GUI condivisa tra player
+
+```java
+Gui<Player, ItemStack> sharedGui = DadaGui.<Player, ItemStack>staticGui()
+        .title("Shared Counter")
+        .layout(
+                "# # # # # # # # #",
+                "# # # C # R # X #",
+                "# # # # # # # # #")
+        .ingredient('#', ingredients.filler(MaterialKey.BLACK_STAINED_GLASS_PANE))
+        .ingredient('C', ingredients.dynamicSlot(context ->
+                GuiSlot.<Player, ItemStack>builder(
+                        ingredients.stack(MaterialKey.GOLD_INGOT, 1, "Clicks: " + sharedClicks.get()))
+                        .onClick(click -> {
+                            sharedClicks.incrementAndGet();
+                            click.refreshAllViewers();
+                        })
+                        .build()))
+        .ingredient('R', ingredients.clickable(MaterialKey.ARROW, "Refresh all", click -> click.refreshAllViewers()))
+        .ingredient('X', navigation.close())
+        .scope(GuiScope.SHARED)
+        .sharedKey("my-plugin:shared-counter")
+        .build();
+```
+
+---
+
+## Nuovi concetti architetturali
+
+| Concetto | Responsabilità | Modulo |
+| --- | --- | --- |
+| `DadaGui` | Entry point fluent per creare GUI | `dadagui-api` |
+| `GuiLayout` | Parsing e validazione layout a marker | `dadagui-api` |
+| `GuiIngredient` | Item/slot renderizzabile, statico o dinamico | `dadagui-api` |
+| `PagedLayoutGui` | GUI paginata basata su layout | `dadagui-api` |
+| `GuiScope` | Definisce stato statico, per-player o shared | `dadagui-api` |
+| `PageMode` | Definisce pagina per-player o condivisa | `dadagui-api` |
+| `MaterialKey` | Chiave materiale indipendente da Bukkit | `dadagui-api` |
+| `BukkitIngredients` | Utility Bukkit per creare ingredienti | `dadagui-bukkit` |
+| `BukkitNavigation` | Ingredienti pronti per previous/next/close | `dadagui-bukkit` |
+
 ---
 
 ## Struttura del progetto
@@ -148,7 +289,7 @@ mvn clean package -pl dadagui-dist-universal -am
 Il jar finale viene generato in:
 
 ```text
-dadagui-dist-universal/target/DadaGUI-universal-2.2.0-SNAPSHOT.jar
+dadagui-dist-universal/target/DadaGUI-universal-2.3.0-SNAPSHOT.jar
 ```
 
 Questo è il file da copiare nella cartella:
@@ -352,13 +493,13 @@ Poi, nel tuo plugin, puoi dipendere dai moduli principali:
 <dependency>
     <groupId>me.mrbast</groupId>
     <artifactId>dadagui-api</artifactId>
-    <version>2.2.0-SNAPSHOT</version>
+    <version>2.3.0-SNAPSHOT</version>
 </dependency>
 
 <dependency>
     <groupId>me.mrbast</groupId>
     <artifactId>dadagui-bukkit</artifactId>
-    <version>2.2.0-SNAPSHOT</version>
+    <version>2.3.0-SNAPSHOT</version>
 </dependency>
 ```
 

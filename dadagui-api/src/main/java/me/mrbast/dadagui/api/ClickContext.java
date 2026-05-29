@@ -1,5 +1,7 @@
 package me.mrbast.dadagui.api;
 
+import java.util.Optional;
+
 /**
  * Platform-neutral click context.
  *
@@ -45,4 +47,47 @@ public interface ClickContext<C, I> {
      * @return native platform event
      */
     Object nativeEvent();
+    /**
+     * Convenience method for refreshing the current GUI session.
+     */
+    default void refresh() {
+        session().refresh();
+    }
+
+    /**
+     * Convenience method for refreshing all viewers of the same shared GUI.
+     */
+    default void refreshAllViewers() {
+        session().refreshAllViewers();
+    }
+
+    /**
+     * Convenience method for closing the current GUI.
+     */
+    default void close() {
+        session().close();
+    }
+
+    /**
+     * Stores a session attribute.
+     *
+     * @param key attribute key
+     * @param value attribute value, or null to remove it
+     */
+    default void setAttribute(String key, Object value) {
+        session().setAttribute(key, value);
+    }
+
+    /**
+     * Reads a typed session attribute.
+     *
+     * @param key attribute key
+     * @param type expected type
+     * @param <T> value type
+     * @return optional value
+     */
+    default <T> Optional<T> getAttribute(String key, Class<T> type) {
+        return session().getAttribute(key, type);
+    }
+
 }

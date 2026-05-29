@@ -20,13 +20,18 @@ public final class BukkitGuiSession implements GuiSession<Player, ItemStack> {
     private final Player viewer;
     private final Gui<Player, ItemStack> gui;
     private final Map<Integer, GuiSlot<Player, ItemStack>> bindings = new HashMap<>();
-    private final Map<String, Object> attributes = new HashMap<>();
+    private final Map<String, Object> attributes;
     private Inventory inventory;
 
     public BukkitGuiSession(BukkitGuiManager manager, Player viewer, Gui<Player, ItemStack> gui) {
+        this(manager, viewer, gui, new HashMap<>());
+    }
+
+    public BukkitGuiSession(BukkitGuiManager manager, Player viewer, Gui<Player, ItemStack> gui, Map<String, Object> attributes) {
         this.manager = manager;
         this.viewer = viewer;
         this.gui = gui;
+        this.attributes = attributes == null ? new HashMap<>() : attributes;
     }
 
     public void attach(Inventory inventory) {
@@ -67,6 +72,11 @@ public final class BukkitGuiSession implements GuiSession<Player, ItemStack> {
     @Override
     public void close() {
         viewer.closeInventory();
+    }
+
+    @Override
+    public void refreshAllViewers() {
+        manager.refreshAll(gui);
     }
 
     @Override

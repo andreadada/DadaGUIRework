@@ -1,5 +1,6 @@
 package me.mrbast.dadagui.bukkit.version;
 
+import me.mrbast.dadagui.api.MaterialKey;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.inventory.ItemStack;
@@ -50,6 +51,18 @@ public interface BukkitVersionAdapter {
      */
     default ItemStack item(String modernName, String legacyName, Material fallback, int amount) {
         return new ItemStack(resolveMaterial(modernName, legacyName, fallback), amount);
+    }
+
+    /**
+     * Creates a safe item stack from a version-neutral material key.
+     *
+     * @param key version-neutral material key
+     * @param amount stack amount
+     * @return item stack
+     */
+    default ItemStack item(MaterialKey key, int amount) {
+        Material fallback = resolveMaterial(key.fallbackName(), key.legacyName(), Material.STONE);
+        return item(key.modernName(), key.legacyName(), fallback, amount);
     }
 
     /**

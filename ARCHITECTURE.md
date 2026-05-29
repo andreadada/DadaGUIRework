@@ -5,7 +5,7 @@
 Il progetto resta modulare, ma il prodotto finale è uno solo:
 
 ```text
-DadaGUI-universal-2.2.0-SNAPSHOT.jar
+DadaGUI-universal-2.3.0-SNAPSHOT.jar
 ```
 
 ## Layer
@@ -85,7 +85,7 @@ mvn clean package -pl dadagui-dist-universal -am
 ## Output
 
 ```text
-dadagui-dist-universal/target/DadaGUI-universal-2.2.0-SNAPSHOT.jar
+dadagui-dist-universal/target/DadaGUI-universal-2.3.0-SNAPSHOT.jar
 ```
 
 ## Estensioni future consigliate
@@ -103,3 +103,36 @@ dadagui-folia-capabilities
 ```
 
 Tutte queste estensioni possono restare nel jar unico finché sono compilate a Java 8 e non referenziano direttamente classi/metodi assenti nelle versioni vecchie.
+
+---
+
+## Layout/Ingredient layer
+
+La versione `2.3.0-SNAPSHOT` aggiunge un layer dichiarativo sopra alle primitive iniziali:
+
+```text
+DadaGui -> builder fluent
+GuiLayout -> layout a marker
+GuiIngredient -> item/slot renderizzabile
+PagedLayoutGui -> paginazione layout-first
+GuiScope -> STATIC / PER_PLAYER / SHARED
+PageMode -> PER_PLAYER / SHARED
+MaterialKey -> chiave materiale neutra rispetto a Bukkit
+```
+
+Il core rimane low-coupled perché questi componenti vivono in `dadagui-api` e non importano Bukkit.
+Il modulo `dadagui-bukkit` fornisce solo factory e runtime bridge:
+
+```text
+BukkitGuiManager -> lifecycle/sessioni/eventi
+BukkitIngredients -> ingredienti Bukkit pronti
+BukkitNavigation -> previous/next/close
+BukkitVersionAdapter -> compatibilità materiali/titoli/versioni
+```
+
+### Regola di coesione
+
+- `dadagui-api` conosce solo concetti di GUI.
+- `dadagui-bukkit` conosce Bukkit e traduce API -> Inventory.
+- `dadagui-version-*` conosce solo differenze di versione.
+- `dadagui-examples` dimostra utilizzo reale, ma non contiene logica framework.

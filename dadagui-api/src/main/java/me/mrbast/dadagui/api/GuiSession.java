@@ -29,6 +29,15 @@ public interface GuiSession<C, I> {
      * Closes the current GUI.
      */
     void close();
+    /**
+     * Re-renders every active viewer attached to the same shared GUI, when the
+     * platform runtime supports shared sessions. For non-shared GUIs this may
+     * fall back to {@link #refresh()}.
+     */
+    default void refreshAllViewers() {
+        refresh();
+    }
+
 
     /**
      * Stores session-scoped state used by dynamic/paginated GUIs.
