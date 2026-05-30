@@ -3,9 +3,15 @@ F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\ap
 F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\builder\DadaGui.java
 F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\builder\DynamicGuiBuilder.java
 F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\builder\LayoutGuiBuilder.java
+F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\builder\PagedEntryGuiBuilder.java
 F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\builder\PaginatedGuiBuilder.java
 F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\builder\StorageGuiBuilder.java
 F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\ClickContext.java
+F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\entry\GuiEntry.java
+F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\entry\GuiEntryFactory.java
+F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\entry\PagedEntryGui.java
+F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\entry\PagedEntryOpenRequest.java
+F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\entry\StaticEntry.java
 F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\Gui.java
 F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\GuiRenderContext.java
 F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\GuiRenderer.java
@@ -21,6 +27,8 @@ F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\ap
 F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\layout\PagedLayoutGui.java
 F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\layout\StorageLayoutGui.java
 F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\MaterialKey.java
+F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\open\GuiOpener.java
+F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\open\GuiOpenOptions.java
 F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\PageMode.java
 F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\pagination\PageControlFactory.java
 F:\intelliJProjects\DadaGUIRework\dadagui-api\src\main\java\me\mrbast\dadagui\api\pagination\PageDataProvider.java

@@ -5,7 +5,7 @@
 Il progetto resta modulare, ma il prodotto finale è uno solo:
 
 ```text
-DadaGUI-universal-2.7.0-SNAPSHOT.jar
+DadaGUI-universal-2.8.0-SNAPSHOT.jar
 ```
 
 ## Layer
@@ -85,7 +85,7 @@ mvn clean package -pl dadagui-dist-universal -am
 ## Output
 
 ```text
-dadagui-dist-universal/target/DadaGUI-universal-2.7.0-SNAPSHOT.jar
+dadagui-dist-universal/target/DadaGUI-universal-2.8.0-SNAPSHOT.jar
 ```
 
 ## Estensioni future consigliate
@@ -108,7 +108,7 @@ Tutte queste estensioni possono restare nel jar unico finché sono compilate a J
 
 ## Layout/Ingredient layer
 
-La versione `2.7.0-SNAPSHOT` aggiunge un layer dichiarativo sopra alle primitive iniziali:
+La versione `2.8.0-SNAPSHOT` aggiunge un layer dichiarativo sopra alle primitive iniziali:
 
 ```text
 DadaGui -> builder fluent
@@ -141,7 +141,7 @@ BukkitVersionAdapter -> compatibilità materiali/titoli/versioni
 
 ## Slot behavior layer
 
-La versione `2.7.0-SNAPSHOT` sostituisce il modello runtime basato su enum con composizione di comportamenti:
+La versione `2.8.0-SNAPSHOT` sostituisce il modello runtime basato su enum con composizione di comportamenti:
 
 ```text
 GuiSlot<C, I>          -> item + lista di SlotBehavior
@@ -220,7 +220,7 @@ Regole runtime:
 
 ## Shadable bundle module
 
-Version `2.7.0-SNAPSHOT` adds:
+Version `2.8.0-SNAPSHOT` adds:
 
 ```text
 dadagui-bundle-universal
@@ -234,6 +234,59 @@ Coordinates:
 <dependency>
     <groupId>it.dadagui</groupId>
     <artifactId>dadagui-bundle-universal</artifactId>
-    <version>2.7.0-SNAPSHOT</version>
+    <version>2.8.0-SNAPSHOT</version>
 </dependency>
 ```
+
+---
+
+## Entry API layer
+
+La versione `2.8.0-SNAPSHOT` aggiunge un livello item-oriented sopra la layout API.
+
+```text
+DadaGui.pagedEntries('x')
+        -> PagedEntryGui
+        -> PagedEntryOpenRequest
+        -> GuiOpenOptions
+        -> GuiSession
+```
+
+Questo layer non sostituisce la paginazione dichiarativa con `contentProvider/contentRenderer`.
+La affianca per casi in cui ogni elemento deve possedere rendering e click.
+
+### Responsabilità
+
+```text
+PagedEntryGui
+- template immutabile della GUI
+- layout, marker, navigazione, scope
+
+PagedEntryOpenRequest
+- entries di quella apertura
+- attributi runtime
+- callback onOpen/onClose
+
+GuiEntry
+- Strategy per trasformare un oggetto in GuiSlot
+
+GuiOpenOptions
+- oggetto di trasferimento per dati runtime per sessione
+
+BukkitGuiManager
+- Facade/runtime adapter che crea la sessione e applica le opzioni
+```
+
+### Perché non `gui.addContent(...)`
+
+`addContent` su una GUI riutilizzabile crea stato condiviso e rischia leakage tra player.
+La Entry API passa il contenuto nella open request:
+
+```java
+recipeGui.open(player)
+        .entries(validRecipes, factory)
+        .onClose(...)
+        .show(guiManager);
+```
+
+Quindi il template resta immutabile e la sessione contiene i dati runtime.

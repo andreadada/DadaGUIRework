@@ -31,6 +31,7 @@ public final class DadaGuiExamplePlugin extends JavaPlugin {
     private Gui<Player, ItemStack> shopHome;
 
     private ExampleShopGuis shopGuis;
+    private ExampleEntryGuis entryGuis;
 
     @Override
     public void onEnable() {
@@ -48,6 +49,7 @@ public final class DadaGuiExamplePlugin extends JavaPlugin {
         ExamplePagedGuis pagedGuis = new ExamplePagedGuis(ingredients, navigation);
         ExampleVaultGuis vaultGuis = new ExampleVaultGuis(ingredients, navigation, vaultRepository);
         this.shopGuis = new ExampleShopGuis(guiManager, ingredients, navigation, shopCatalog);
+        this.entryGuis = new ExampleEntryGuis(guiManager, ingredients, navigation);
 
         this.playerSettings = runtimeGuis.playerSettings();
         this.sharedCounter = sharedGuis.sharedCounter();
@@ -131,6 +133,14 @@ public final class DadaGuiExamplePlugin extends JavaPlugin {
             guiManager.open(player, shopGuis.shopCategory("utility"));
             return true;
         }
+        if ("entryrecipes".equals(mode) || "recipeitems".equals(mode)) {
+            entryGuis.openRecipePicker(player);
+            return true;
+        }
+        if ("entryshop".equals(mode) || "quickshop".equals(mode)) {
+            entryGuis.openQuickShop(player);
+            return true;
+        }
         if ("vault".equals(mode) || "personalvault".equals(mode)) {
             guiManager.open(player, personalVault);
             return true;
@@ -156,6 +166,8 @@ public final class DadaGuiExamplePlugin extends JavaPlugin {
         player.sendMessage("§7/dadagui online §8- shared paged online-player list");
         player.sendMessage("§7/dadagui shop §8- category shop");
         player.sendMessage("§7/dadagui shopblocks §8- paged shop category");
+        player.sendMessage("§7/dadagui entryrecipes §8- item-oriented recipe entries");
+        player.sendMessage("§7/dadagui entryshop §8- item-oriented shop entries");
         player.sendMessage("§7/dadagui vault §8- personal storage vault");
         player.sendMessage("§7/dadagui teamvault §8- shared storage vault");
     }

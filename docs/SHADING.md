@@ -19,7 +19,7 @@ mvn clean install -pl dadagui-bundle-universal -am
 This installs the artifact in your local Maven repository:
 
 ```text
-~/.m2/repository/it/dadagui/dadagui-bundle-universal/2.7.0-SNAPSHOT/
+~/.m2/repository/it/dadagui/dadagui-bundle-universal/2.8.0-SNAPSHOT/
 ```
 
 After that, your plugin can depend on it.
@@ -30,7 +30,7 @@ After that, your plugin can depend on it.
 <dependency>
     <groupId>it.dadagui</groupId>
     <artifactId>dadagui-bundle-universal</artifactId>
-    <version>2.7.0-SNAPSHOT</version>
+    <version>2.8.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -92,7 +92,7 @@ Do not use `dadagui-dist-universal` as a dependency for another plugin.
 If Maven shows:
 
 ```text
-Could not find artifact it.dadagui:dadagui-bundle-universal:pom:2.7.0-SNAPSHOT
+Could not find artifact it.dadagui:dadagui-bundle-universal:pom:2.8.0-SNAPSHOT
 ```
 
 then the bundle has not been installed or published. Fix it with:

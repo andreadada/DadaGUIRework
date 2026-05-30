@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="420" viewBox="0 0 980 420" role="img" aria-label="Reusable template versus mutating GUI">
+  <rect width="980" height="420" fill="#fafafa"/>
+  <text x="40" y="46" font-family="Arial, sans-serif" font-size="25" font-weight="700" fill="#111">Reusable template vs mutating GUI</text>
+
+  <g font-family="Arial, sans-serif">
+    <text x="70" y="95" font-size="18" font-weight="700" fill="#7a1f1f">Avoid</text>
+    <rect x="60" y="115" width="380" height="230" rx="22" fill="#fff" stroke="#b85858" stroke-width="2"/>
+    <text x="90" y="152" font-size="16" font-weight="700" fill="#111">gui.addContent(...)</text>
+    <text x="90" y="182" font-size="13" fill="#555">Player A adds recipes A</text>
+    <text x="90" y="205" font-size="13" fill="#555">Player B adds recipes B</text>
+    <text x="90" y="228" font-size="13" fill="#555">Same GUI object is mutated</text>
+    <rect x="90" y="255" width="290" height="48" rx="12" fill="#f5dddd"/>
+    <text x="112" y="285" font-size="13" fill="#7a1f1f">risk: data leaks between viewers</text>
+
+    <text x="550" y="95" font-size="18" font-weight="700" fill="#1f6f3d">Prefer</text>
+    <rect x="540" y="115" width="380" height="230" rx="22" fill="#fff" stroke="#52a06b" stroke-width="2"/>
+    <text x="570" y="152" font-size="16" font-weight="700" fill="#111">gui.open(player).entries(...)</text>
+    <text x="570" y="182" font-size="13" fill="#555">Template stays immutable</text>
+    <text x="570" y="205" font-size="13" fill="#555">Entries live in OpenRequest</text>
+    <text x="570" y="228" font-size="13" fill="#555">Session isolates each viewer</text>
+    <rect x="570" y="255" width="290" height="48" rx="12" fill="#dff0e2"/>
+    <text x="592" y="285" font-size="13" fill="#1f6f3d">safe: one template, many sessions</text>
+  </g>
+</svg>

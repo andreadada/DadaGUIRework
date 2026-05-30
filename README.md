@@ -359,7 +359,7 @@ mvn clean package -pl dadagui-dist-universal -am
 Il jar finale viene generato in:
 
 ```text
-dadagui-dist-universal/target/DadaGUI-universal-2.7.0-SNAPSHOT.jar
+dadagui-dist-universal/target/DadaGUI-universal-2.8.0-SNAPSHOT.jar
 ```
 
 Questo è il file da copiare nella cartella:
@@ -563,13 +563,13 @@ Poi, nel tuo plugin, puoi dipendere dai moduli principali:
 <dependency>
     <groupId>me.mrbast</groupId>
     <artifactId>dadagui-api</artifactId>
-    <version>2.7.0-SNAPSHOT</version>
+    <version>2.8.0-SNAPSHOT</version>
 </dependency>
 
 <dependency>
     <groupId>me.mrbast</groupId>
     <artifactId>dadagui-bukkit</artifactId>
-    <version>2.7.0-SNAPSHOT</version>
+    <version>2.8.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -722,10 +722,98 @@ Then in your plugin:
 <dependency>
     <groupId>it.dadagui</groupId>
     <artifactId>dadagui-bundle-universal</artifactId>
-    <version>2.7.0-SNAPSHOT</version>
+    <version>2.8.0-SNAPSHOT</version>
 </dependency>
 ```
 
 Then configure `maven-shade-plugin` with `ServicesResourceTransformer`, because the Minecraft version adapters are loaded using `ServiceLoader`.
 
 Full guide: [`docs/SHADING.md`](docs/SHADING.md).
+
+---
+
+## API item-oriented: `GuiEntry`
+
+Dalla versione `2.8.0-SNAPSHOT` DadaGUI supporta anche uno stile più vicino ai sistemi basati su `AbstractItem`.
+È utile quando ogni contenuto deve sapere da solo:
+
+- come disegnarsi;
+- quale item mostrare;
+- cosa fare al click.
+
+Invece di mutare la GUI globale con `gui.addContent(...)`, passi gli entry **solo nella richiesta di apertura**.
+
+```java
+PagedEntryGui<Player, ItemStack> recipeGui = DadaGui.<Player, ItemStack>pagedEntries('x')
+        .title("Pick The Recipe To Craft")
+        .layout(
+                "# # # # # # # # #",
+                "# x x x x x x x #",
+                "# # # < # > # # C")
+        .ingredient('#', ingredients.filler(MaterialKey.BLACK_STAINED_GLASS_PANE))
+        .ingredient('<', navigation.previousPage())
+        .ingredient('>', navigation.nextPage())
+        .ingredient('C', navigation.close())
+        .emptyIngredient(ingredients.display(MaterialKey.GRAY_STAINED_GLASS_PANE, " "))
+        .scope(GuiScope.PER_PLAYER)
+        .pageMode(PageMode.PER_PLAYER)
+        .build();
+```
+
+Quando devi aprirla:
+
+```java
+recipeGui.open(player)
+        .entries(validRecipes, (recipe, index) -> new RecipeEntry(context, recipe, ingredients))
+        .onClose(session -> crafting.finishBusy())
+        .show(guiManager);
+```
+
+Esempio di entry:
+
+```java
+public final class RecipeEntry implements GuiEntry<Player, ItemStack> {
+    private final Context context;
+    private final Recipe recipe;
+    private final BukkitIngredients ingredients;
+
+    public RecipeEntry(Context context, Recipe recipe, BukkitIngredients ingredients) {
+        this.context = context;
+        this.recipe = recipe;
+        this.ingredients = ingredients;
+    }
+
+    @Override
+    public GuiSlot<Player, ItemStack> toSlot(GuiRenderContext<Player, ItemStack> renderContext, int slotIndex) {
+        ItemStack item = recipe.getGUIItem() == null
+                ? defaultRecipeItem()
+                : recipe.getGUIItem().getBuilder().build();
+
+        return GuiSlot.<Player, ItemStack>builder(item)
+                .button()
+                .onClick(click -> {
+                    context.getCrafting().craft(context, recipe);
+                    click.close();
+                })
+                .build();
+    }
+}
+```
+
+Questo modello mantiene la GUI riutilizzabile e isola i dati runtime nella sessione.
+
+```text
+GUI template       -> riutilizzabile
+Open request       -> entries, attribute, onClose specifici
+GuiSession         -> stato di quella apertura
+GuiEntry           -> item-oriented render + click
+```
+
+Comandi demo aggiunti:
+
+```text
+/dadagui entryrecipes -> ricette item-oriented tipo vecchio RecipeItem
+/dadagui entryshop    -> shop rapido con GuiEntry
+```
+
+Documentazione dedicata: [`docs/ENTRY_API.md`](docs/ENTRY_API.md).

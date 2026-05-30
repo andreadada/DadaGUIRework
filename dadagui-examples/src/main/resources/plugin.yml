@@ -1,8 +1,8 @@
 name: DadaGUIExamples
-version: 2.7.0-SNAPSHOT
+version: 2.8.0-SNAPSHOT
 main: me.mrbast.dadagui.examples.DadaGuiExamplePlugin
 author: MrBast
 commands:
   dadagui:
     description: Opens the DadaGUI example menus.
-    usage: /dadagui [static|player|shared|paged|vault|teamvault]
+    usage: /dadagui [hub|static|player|shared|paged|shop|entryrecipes|entryshop|vault|teamvault]

@@ -184,3 +184,42 @@ Bukkit runtime only renders and dispatches events.
 ```
 
 That keeps the framework low-coupled and cohesive while still being easy to use.
+
+---
+
+## Item-oriented entries
+
+Comandi demo:
+
+```text
+/dadagui entryrecipes
+/dadagui entryshop
+```
+
+### Ricette stile `RecipeItem`
+
+```java
+recipePicker.open(player)
+        .entries(validRecipes, (recipe, index) -> new RecipeEntry(craftingContext, recipe, ingredients))
+        .onClose(session -> craftingContext.finishBusy())
+        .show(guiManager);
+```
+
+Ogni entry implementa:
+
+```java
+GuiSlot<Player, ItemStack> toSlot(GuiRenderContext<Player, ItemStack> context, int slotIndex)
+```
+
+Questa API è più pratica quando l'oggetto deve decidere da solo item, nome, lore e click.
+
+### Shop entry rapida
+
+```java
+quickShop.open(player)
+        .entries(items, (item, index) -> ingredients.entry(
+                item,
+                value -> ingredients.stack(value.icon(), 1, value.displayName()),
+                (click, value) -> click.viewer().sendMessage("Bought " + value.displayName())))
+        .show(guiManager);
+```

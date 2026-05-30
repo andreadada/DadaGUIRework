@@ -3,6 +3,9 @@ package me.mrbast.dadagui.bukkit;
 import me.mrbast.dadagui.api.Gui;
 import me.mrbast.dadagui.api.GuiScope;
 import me.mrbast.dadagui.api.GuiSlot;
+import me.mrbast.dadagui.api.GuiSession;
+import me.mrbast.dadagui.api.open.GuiOpenOptions;
+import me.mrbast.dadagui.api.open.GuiOpener;
 import me.mrbast.dadagui.api.storage.StorageBinding;
 import me.mrbast.dadagui.bukkit.session.BukkitClickContext;
 import me.mrbast.dadagui.bukkit.session.BukkitGuiHolder;
@@ -27,12 +30,13 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
  * Bukkit/Spigot/Paper runtime coordinator.
  * The public API remains generic; this class only adapts it to Bukkit inventories/events.
  */
-public final class BukkitGuiManager implements Listener {
+public final class BukkitGuiManager implements Listener, GuiOpener<Player, ItemStack> {
     private final Plugin plugin;
     private final BukkitVersionAdapter versionAdapter;
     private final Map<UUID, BukkitGuiSession> sessions = new HashMap<>();
@@ -61,22 +65,34 @@ public final class BukkitGuiManager implements Listener {
 
     public void unregister() {
         for (BukkitGuiSession session : sessions.values()) {
-            synchronizeStorage(session);
-            session.gui().onClose(session);
+            closeSession(session);
         }
         HandlerList.unregisterAll(this);
         sessions.clear();
         registered = false;
     }
 
+    @Override
     public BukkitGuiSession open(Player player, Gui<Player, ItemStack> gui) {
+        return open(player, gui, GuiOpenOptions.<Player, ItemStack>empty());
+    }
+
+    @Override
+    public BukkitGuiSession open(Player player, Gui<Player, ItemStack> gui, GuiOpenOptions<Player, ItemStack> options) {
+        GuiOpenOptions<Player, ItemStack> safeOptions = options == null
+                ? GuiOpenOptions.<Player, ItemStack>empty()
+                : options;
+
         BukkitGuiSession previous = sessions.get(player.getUniqueId());
         if (previous != null) {
-            synchronizeStorage(previous);
-            previous.gui().onClose(previous);
+            closeSession(previous);
             sessions.remove(player.getUniqueId());
         }
-        BukkitGuiSession session = new BukkitGuiSession(this, player, gui, attributesFor(gui));
+
+        Map<String, Object> attributes = attributesFor(gui);
+        attributes.putAll(safeOptions.attributes());
+
+        BukkitGuiSession session = new BukkitGuiSession(this, player, gui, attributes, safeOptions.closeHandlers());
         String title = versionAdapter.normalizeInventoryTitle(gui.title(player));
         Inventory inventory = Bukkit.createInventory(new BukkitGuiHolder(session), normalizeSize(gui.size(player)), title);
         session.attach(inventory);
@@ -84,6 +100,9 @@ public final class BukkitGuiManager implements Listener {
         sessions.put(player.getUniqueId(), session);
         player.openInventory(inventory);
         gui.onOpen(session);
+        for (Consumer<GuiSession<Player, ItemStack>> handler : safeOptions.openHandlers()) {
+            handler.accept(session);
+        }
         return session;
     }
 
@@ -201,8 +220,7 @@ public final class BukkitGuiManager implements Listener {
         Player player = (Player) event.getPlayer();
         BukkitGuiSession session = sessions.remove(player.getUniqueId());
         if (session != null) {
-            synchronizeStorage(session);
-            session.gui().onClose(session);
+            closeSession(session);
             cleanupSharedAttributes(session.gui());
         }
     }
@@ -211,10 +229,18 @@ public final class BukkitGuiManager implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         BukkitGuiSession session = sessions.remove(event.getPlayer().getUniqueId());
         if (session != null) {
-            synchronizeStorage(session);
-            session.gui().onClose(session);
+            closeSession(session);
             cleanupSharedAttributes(session.gui());
         }
+    }
+
+    private void closeSession(BukkitGuiSession session) {
+        if (session == null) {
+            return;
+        }
+        synchronizeStorage(session);
+        session.gui().onClose(session);
+        session.runCloseHandlers();
     }
 
     private void synchronizeStorage(BukkitGuiSession session) {

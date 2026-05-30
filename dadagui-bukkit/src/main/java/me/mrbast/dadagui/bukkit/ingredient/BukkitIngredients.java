@@ -6,6 +6,7 @@ import me.mrbast.dadagui.api.GuiSlot;
 import me.mrbast.dadagui.api.MaterialKey;
 import me.mrbast.dadagui.api.SlotType;
 import me.mrbast.dadagui.api.behavior.SlotBehavior;
+import me.mrbast.dadagui.api.entry.GuiEntry;
 import me.mrbast.dadagui.api.layout.GuiIngredient;
 import me.mrbast.dadagui.bukkit.version.BukkitVersionAdapter;
 import org.bukkit.entity.Player;
@@ -14,6 +15,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -86,6 +88,38 @@ public final class BukkitIngredients {
                                                       Consumer<ClickContext<Player, ItemStack>> onClick) {
         ItemStack item = stack(key, 1, name, lore);
         return rawClickable(item, onClick);
+    }
+
+    /**
+     * Creates an item-oriented entry from an already built item.
+     *
+     * <p>This is the shortest migration path from systems where an item class
+     * had both a visual item and a click handler.</p>
+     */
+    public GuiEntry<Player, ItemStack> entry(ItemStack item,
+                                             Consumer<ClickContext<Player, ItemStack>> onClick) {
+        return (context, slotIndex) -> item == null ? null : GuiSlot.<Player, ItemStack>builder(item.clone())
+                .button()
+                .onClick(click -> {
+                    if (onClick != null) {
+                        onClick.accept(click);
+                    }
+                })
+                .build();
+    }
+
+    /**
+     * Creates an item-oriented entry from a domain object.
+     */
+    public <T> GuiEntry<Player, ItemStack> entry(T value,
+                                                 Function<T, ItemStack> itemFactory,
+                                                 BiConsumer<ClickContext<Player, ItemStack>, T> onClick) {
+        ItemStack item = itemFactory == null ? null : itemFactory.apply(value);
+        return entry(item, click -> {
+            if (onClick != null) {
+                onClick.accept(click, value);
+            }
+        });
     }
 
     /**
