@@ -5,7 +5,7 @@
 Il progetto resta modulare, ma il prodotto finale è uno solo:
 
 ```text
-DadaGUI-universal-2.3.0-SNAPSHOT.jar
+DadaGUI-universal-2.7.0-SNAPSHOT.jar
 ```
 
 ## Layer
@@ -85,7 +85,7 @@ mvn clean package -pl dadagui-dist-universal -am
 ## Output
 
 ```text
-dadagui-dist-universal/target/DadaGUI-universal-2.3.0-SNAPSHOT.jar
+dadagui-dist-universal/target/DadaGUI-universal-2.7.0-SNAPSHOT.jar
 ```
 
 ## Estensioni future consigliate
@@ -108,7 +108,7 @@ Tutte queste estensioni possono restare nel jar unico finché sono compilate a J
 
 ## Layout/Ingredient layer
 
-La versione `2.3.0-SNAPSHOT` aggiunge un layer dichiarativo sopra alle primitive iniziali:
+La versione `2.7.0-SNAPSHOT` aggiunge un layer dichiarativo sopra alle primitive iniziali:
 
 ```text
 DadaGui -> builder fluent
@@ -136,3 +136,104 @@ BukkitVersionAdapter -> compatibilità materiali/titoli/versioni
 - `dadagui-bukkit` conosce Bukkit e traduce API -> Inventory.
 - `dadagui-version-*` conosce solo differenze di versione.
 - `dadagui-examples` dimostra utilizzo reale, ma non contiene logica framework.
+
+---
+
+## Slot behavior layer
+
+La versione `2.7.0-SNAPSHOT` sostituisce il modello runtime basato su enum con composizione di comportamenti:
+
+```text
+GuiSlot<C, I>          -> item + lista di SlotBehavior
+SlotBehavior<C, I>     -> Strategy estendibile per click/storage/native movement
+SlotBehaviors          -> factory di comportamenti built-in
+SlotType               -> solo preset/compatibilità nel builder
+```
+
+Scelta di design:
+
+```text
+GuiSlot HAS-A SlotBehavior[]
+non
+StorageSlot IS-A GuiSlot
+ButtonSlot IS-A GuiSlot
+```
+
+Motivo: aggiungere un nuovo tipo di slot non deve richiedere modifiche a enum, switch o runtime Bukkit. Un plugin può definire un nuovo `SlotBehavior` fuori dal framework e assegnarlo a uno slot tramite builder/factory.
+
+Pattern usati:
+
+```text
+Builder   -> costruzione fluente di GUI e slot
+Strategy  -> SlotBehavior decide click/storage policy
+Factory   -> SlotBehaviors, BukkitIngredients, BukkitNavigation
+Adapter   -> BukkitVersionAdapter per versioni Minecraft
+Facade    -> DadaGui come entry point API
+Observer  -> refresh/refreshAllViewers sulle sessioni aperte
+Template-like lifecycle -> open/render/click/refresh/close gestiti dal manager runtime
+```
+
+## Storage/Vault layer
+
+Il layer storage rimane separato dal core Bukkit:
+
+```text
+StorageContainer<I>    -> contenitore mutabile platform-neutral
+StorageProvider<C, I>  -> risolve quale storage mostrare al viewer
+StorageSaveHandler     -> salva lo storage sincronizzato
+StorageLayoutGui       -> layout con solo alcuni marker mutabili
+```
+
+La GUI non salva direttamente su file/database. La GUI espone solo i punti di integrazione:
+
+```text
+storageProvider(context -> repository.personal(playerId))
+onSave((session, storage) -> repository.save(playerId, storage))
+```
+
+Questo mantiene:
+
+- **low coupling**: la GUI non sa se lo storage è YAML, SQL, Redis o memoria;
+- **high cohesion**: il runtime Bukkit gestisce eventi inventory, la repository gestisce persistenza, la GUI gestisce layout/slot;
+- **sicurezza**: solo gli slot con comportamento storage permettono movimento nativo degli item.
+
+## Gestione eventi storage Bukkit
+
+`BukkitGuiManager` ora gestisce:
+
+```text
+InventoryClickEvent
+InventoryDragEvent
+InventoryCloseEvent
+PlayerQuitEvent
+plugin shutdown
+```
+
+Regole runtime:
+
+- click su filler/display/button/content non-storage: protetto secondo `SlotBehavior.shouldCancelClick`;
+- click su storage slot: movimento nativo permesso tramite `SlotBehavior.acceptsNativeItemMovement`;
+- drag su slot non-storage: cancellato;
+- shift-click dal player inventory verso la GUI: cancellato di default;
+- prima di refresh/close/quit/shutdown: sincronizzazione storage visibile -> StorageContainer;
+- dopo la sincronizzazione: chiamata a `StorageSaveHandler`.
+
+## Shadable bundle module
+
+Version `2.7.0-SNAPSHOT` adds:
+
+```text
+dadagui-bundle-universal
+```
+
+This module is not a Bukkit plugin. It has no `plugin.yml` and no example command classes. It is the artifact intended for other plugins that want to embed DadaGUI with Maven Shade.
+
+Coordinates:
+
+```xml
+<dependency>
+    <groupId>it.dadagui</groupId>
+    <artifactId>dadagui-bundle-universal</artifactId>
+    <version>2.7.0-SNAPSHOT</version>
+</dependency>
+```

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="420" viewBox="0 0 980 420" role="img" aria-label="DadaGUI slot behavior composition">
+  <rect width="980" height="420" fill="#f7f7f7"/>
+  <text x="40" y="42" font-family="Arial, sans-serif" font-size="26" font-weight="700" fill="#111">Slot design: HAS-A behaviors</text>
+  <text x="40" y="72" font-family="Arial, sans-serif" font-size="15" fill="#333">GuiSlot is stable. New slot kinds are added by composing SlotBehavior strategies.</text>
+
+  <rect x="70" y="125" width="250" height="145" rx="18" fill="#111"/>
+  <text x="105" y="165" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#fff">GuiSlot</text>
+  <text x="105" y="198" font-family="Arial, sans-serif" font-size="15" fill="#ddd">item: I</text>
+  <text x="105" y="224" font-family="Arial, sans-serif" font-size="15" fill="#ddd">behaviors: List&lt;SlotBehavior&gt;</text>
+
+  <line x1="320" y1="197" x2="430" y2="197" stroke="#111" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="342" y="184" font-family="Arial, sans-serif" font-size="14" fill="#111">HAS-A</text>
+
+  <rect x="455" y="70" width="200" height="70" rx="14" fill="#e7e1ff" stroke="#7864ff" stroke-width="2"/>
+  <text x="485" y="113" font-family="Arial, sans-serif" font-size="17" font-weight="700" fill="#17113f">ButtonBehavior</text>
+
+  <rect x="455" y="160" width="200" height="70" rx="14" fill="#e1f6ea" stroke="#39a96b" stroke-width="2"/>
+  <text x="486" y="203" font-family="Arial, sans-serif" font-size="17" font-weight="700" fill="#0b3b22">StorageBehavior</text>
+
+  <rect x="455" y="250" width="200" height="70" rx="14" fill="#fff3d6" stroke="#e5a100" stroke-width="2"/>
+  <text x="492" y="293" font-family="Arial, sans-serif" font-size="17" font-weight="700" fill="#4b3500">CustomBehavior</text>
+
+  <rect x="725" y="120" width="190" height="150" rx="18" fill="#fff" stroke="#111" stroke-width="2"/>
+  <text x="758" y="160" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#111">Bukkit runtime</text>
+  <text x="748" y="195" font-family="Arial, sans-serif" font-size="14" fill="#333">asks behavior:</text>
+  <text x="748" y="220" font-family="Arial, sans-serif" font-size="14" fill="#333">• cancel click?</text>
+  <text x="748" y="245" font-family="Arial, sans-serif" font-size="14" fill="#333">• allow storage?</text>
+
+  <line x1="655" y1="105" x2="725" y2="168" stroke="#7864ff" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="655" y1="195" x2="725" y2="195" stroke="#39a96b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="655" y1="285" x2="725" y2="230" stroke="#e5a100" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#111"/>
+    </marker>
+  </defs>
+</svg>

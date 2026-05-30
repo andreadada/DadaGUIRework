@@ -1,0 +1,11 @@
+me\mrbast\dadagui\bukkit\item\BukkitItemBuilder.class
+me\mrbast\dadagui\bukkit\session\BukkitGuiRenderContext.class
+me\mrbast\dadagui\bukkit\version\DefaultBukkitVersionAdapter.class
+me\mrbast\dadagui\bukkit\version\BukkitVersionAdapters.class
+me\mrbast\dadagui\bukkit\session\BukkitGuiSession.class
+me\mrbast\dadagui\bukkit\version\BukkitVersionAdapter.class
+me\mrbast\dadagui\bukkit\BukkitGuiManager.class
+me\mrbast\dadagui\bukkit\session\BukkitClickContext.class
+me\mrbast\dadagui\bukkit\session\BukkitGuiHolder.class
+me\mrbast\dadagui\bukkit\ingredient\BukkitNavigation.class
+me\mrbast\dadagui\bukkit\ingredient\BukkitIngredients.class

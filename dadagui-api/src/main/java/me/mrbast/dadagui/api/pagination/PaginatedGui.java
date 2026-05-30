@@ -1,6 +1,5 @@
 package me.mrbast.dadagui.api.pagination;
 
-import me.mrbast.dadagui.api.ClickContext;
 import me.mrbast.dadagui.api.Gui;
 import me.mrbast.dadagui.api.GuiRenderContext;
 import me.mrbast.dadagui.api.GuiSlot;
@@ -99,11 +98,10 @@ public final class PaginatedGui<C, I, T> implements Gui<C, I> {
 
     private GuiSlot<C, I> wrapControl(GuiSlot<C, I> source, int targetPage) {
         return GuiSlot.<C, I>builder(source.item())
-                .cancelClick(source.cancelClick())
-                .onClick((ClickContext<C, I> context) -> {
+                .behaviors(source.behaviors())
+                .onClick(context -> {
                     context.session().setAttribute(pageAttributeKey, targetPage);
                     context.session().refresh();
-                    source.click(context);
                 })
                 .build();
     }

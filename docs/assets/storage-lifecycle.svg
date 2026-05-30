@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="420" viewBox="0 0 980 420" role="img" aria-label="Storage GUI lifecycle">
+  <rect width="980" height="420" fill="#FFFFFF"/>
+  <text x="40" y="55" fill="#111827" font-family="Arial, sans-serif" font-size="30" font-weight="700">Storage GUI lifecycle</text>
+  <defs><marker id="c" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M2,2 L10,6 L2,10" fill="#111827"/></marker></defs>
+  <g font-family="Arial, sans-serif" font-size="16">
+    <rect x="45" y="150" width="150" height="70" rx="14" fill="#E0F2FE" stroke="#0284C7"/><text x="81" y="191" fill="#0C4A6E">open()</text>
+    <rect x="255" y="150" width="150" height="70" rx="14" fill="#FEF3C7" stroke="#D97706"/><text x="292" y="191" fill="#78350F">render()</text>
+    <rect x="465" y="150" width="150" height="70" rx="14" fill="#DCFCE7" stroke="#16A34A"/><text x="490" y="181" fill="#14532D">native item</text><text x="502" y="204" fill="#14532D">movement</text>
+    <rect x="675" y="150" width="150" height="70" rx="14" fill="#FCE7F3" stroke="#DB2777"/><text x="713" y="191" fill="#831843">sync()</text>
+    <rect x="465" y="285" width="150" height="70" rx="14" fill="#EDE9FE" stroke="#7C3AED"/><text x="506" y="314" fill="#4C1D95">save()</text><text x="492" y="337" fill="#4C1D95">close/quit</text>
+    <line x1="195" y1="185" x2="255" y2="185" stroke="#111827" stroke-width="3" marker-end="url(#c)"/>
+    <line x1="405" y1="185" x2="465" y2="185" stroke="#111827" stroke-width="3" marker-end="url(#c)"/>
+    <line x1="615" y1="185" x2="675" y2="185" stroke="#111827" stroke-width="3" marker-end="url(#c)"/>
+    <path d="M750 220 C730 285 650 320 615 320" fill="none" stroke="#111827" stroke-width="3" marker-end="url(#c)"/>
+  </g>
+</svg>

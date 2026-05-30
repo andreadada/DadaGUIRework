@@ -7,6 +7,7 @@ Il progetto è pensato per avere:
 - GUI statiche;
 - GUI dinamiche generate a runtime;
 - GUI paginate;
+- GUI storage/vault con slot mutabili solo dove decidi tu;
 - slot riutilizzabili con click handler;
 - refresh della vista;
 - separazione tra API, runtime Bukkit e adapter di versione;
@@ -146,15 +147,80 @@ Questa API è la via consigliata perché separa bene le responsabilità:
 
 ---
 
+## GUI storage / vault
+
+Per vault, backpack e contenitori virtuali non devi rendere tutta la GUI modificabile.
+Scegli un marker, per esempio `v`, e solo quegli slot ricevono il comportamento `storage`.
+Tutto il resto resta filler, bottone, display-only o locked.
+
+Nota di design: `SlotType` esiste ancora come scorciatoia del builder, ma non è più il modello centrale.
+Uno slot ora **ha comportamenti** (`SlotBehavior`) componibili: questa scelta segue composition over inheritance, evita grandi `switch` su enum e permette di aggiungere nuovi comportamenti fuori dal core.
+
+```java
+Gui<Player, ItemStack> vaultGui = DadaGui.<Player, ItemStack>storage('v')
+        .title(player -> "Vault | " + player.getName())
+        .layout(
+                "# # # # # # # # #",
+                "# v v v v v v v #",
+                "# v v v v v v v #",
+                "# v v v v v v v #",
+                "# # # I # C # # #")
+        .ingredient('#', ingredients.filler(MaterialKey.BLACK_STAINED_GLASS_PANE))
+        .ingredient('I', ingredients.display(MaterialKey.BOOK, "Info"))
+        .ingredient('C', navigation.close())
+        .storageProvider(context -> vaultRepository.personal(context.viewer().getUniqueId()))
+        .onSave((session, storage) -> vaultRepository.savePersonal(session.viewer().getUniqueId(), storage))
+        .scope(GuiScope.PER_PLAYER)
+        .build();
+```
+
+Il runtime Bukkit protegge automaticamente decorazioni e bottoni, permette movimento item solo negli slot storage, sincronizza la storage prima del refresh e salva su close/quit/shutdown.
+
+### Custom slot behavior
+
+Se un plugin vuole un nuovo tipo di slot, non deve modificare enum o runtime centrale.
+Basta aggiungere un comportamento custom:
+
+```java
+public final class AuditBehavior implements SlotBehavior<Player, ItemStack> {
+    @Override
+    public String key() {
+        return "my-plugin:audit";
+    }
+
+    @Override
+    public boolean shouldCancelClick(ClickContext<Player, ItemStack> context) {
+        return true;
+    }
+
+    @Override
+    public void onClick(ClickContext<Player, ItemStack> context) {
+        context.viewer().sendMessage("Custom behavior executed");
+    }
+}
+```
+
+E usarlo in una GUI:
+
+```java
+.ingredient('A', ingredients.fixed(item, new AuditBehavior()))
+```
+
+Il progetto include anche `ExampleSlotBehaviors` nel modulo `dadagui-examples`.
+
+Vedi anche [`docs/USE_CASES.md`](docs/USE_CASES.md) per diagrammi e casi d'uso.
+
 ## Esempi inclusi
 
-Il modulo `dadagui-examples` contiene quattro esempi pronti:
+Il modulo `dadagui-examples` contiene esempi pronti:
 
 ```text
-/dadagui static   -> GUI statica uguale per tutti
-/dadagui player   -> GUI runtime basata sul player
-/dadagui shared   -> GUI condivisa tra più player
-/dadagui paged    -> GUI paginata stile lista ricette
+/dadagui static    -> GUI statica uguale per tutti
+/dadagui player    -> GUI runtime basata sul player
+/dadagui shared    -> GUI condivisa tra più player
+/dadagui paged     -> GUI paginata stile lista ricette
+/dadagui vault     -> vault personale con slot storage
+/dadagui teamvault -> vault condiviso tra player
 ```
 
 ### GUI statica
@@ -231,6 +297,10 @@ Gui<Player, ItemStack> sharedGui = DadaGui.<Player, ItemStack>staticGui()
 | `GuiIngredient` | Item/slot renderizzabile, statico o dinamico | `dadagui-api` |
 | `PagedLayoutGui` | GUI paginata basata su layout | `dadagui-api` |
 | `GuiScope` | Definisce stato statico, per-player o shared | `dadagui-api` |
+| `SlotBehavior` | Strategy estendibile che definisce comportamento click/storage di uno slot | `dadagui-api` |
+| `SlotBehaviors` | Factory di comportamenti comuni: filler, display, button, content, storage, locked | `dadagui-api` |
+| `SlotType` | Solo preset/compatibilità per il builder, non modello runtime centrale | `dadagui-api` |
+| `StorageLayoutGui` | GUI per vault/contenitori virtuali con soli slot storage mutabili | `dadagui-api` |
 | `PageMode` | Definisce pagina per-player o condivisa | `dadagui-api` |
 | `MaterialKey` | Chiave materiale indipendente da Bukkit | `dadagui-api` |
 | `BukkitIngredients` | Utility Bukkit per creare ingredienti | `dadagui-bukkit` |
@@ -289,7 +359,7 @@ mvn clean package -pl dadagui-dist-universal -am
 Il jar finale viene generato in:
 
 ```text
-dadagui-dist-universal/target/DadaGUI-universal-2.3.0-SNAPSHOT.jar
+dadagui-dist-universal/target/DadaGUI-universal-2.7.0-SNAPSHOT.jar
 ```
 
 Questo è il file da copiare nella cartella:
@@ -493,13 +563,13 @@ Poi, nel tuo plugin, puoi dipendere dai moduli principali:
 <dependency>
     <groupId>me.mrbast</groupId>
     <artifactId>dadagui-api</artifactId>
-    <version>2.3.0-SNAPSHOT</version>
+    <version>2.7.0-SNAPSHOT</version>
 </dependency>
 
 <dependency>
     <groupId>me.mrbast</groupId>
     <artifactId>dadagui-bukkit</artifactId>
-    <version>2.3.0-SNAPSHOT</version>
+    <version>2.7.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -612,3 +682,50 @@ Apache-2.0
 ```
 
 se vuoi una licenza più strutturata per uso framework/libreria.
+
+## Example gallery
+
+The `dadagui-examples` module now contains a wider set of ready-to-copy examples:
+
+```text
+/dadagui hub          -> example hub
+/dadagui static       -> static reusable GUI
+/dadagui confirm      -> confirmation dialog
+/dadagui player       -> runtime per-player settings/profile GUI
+/dadagui shared       -> shared counter GUI
+/dadagui vote         -> shared vote board
+/dadagui paged        -> personal paged recipe list
+/dadagui online       -> shared paged online-player list
+/dadagui shop         -> shop category menu
+/dadagui shopblocks   -> paged shop category
+/dadagui shoprare     -> paged shop category
+/dadagui shoputility  -> paged shop category
+/dadagui vault        -> personal storage vault
+/dadagui teamvault    -> shared/team storage vault
+```
+
+See [`docs/EXAMPLES.md`](docs/EXAMPLES.md) for the full explanation and code snippets.
+
+---
+
+## Shading DadaGUI inside another plugin
+
+Use `dadagui-bundle-universal`, not `dadagui-dist-universal`.
+
+```bash
+mvn clean install -pl dadagui-bundle-universal -am
+```
+
+Then in your plugin:
+
+```xml
+<dependency>
+    <groupId>it.dadagui</groupId>
+    <artifactId>dadagui-bundle-universal</artifactId>
+    <version>2.7.0-SNAPSHOT</version>
+</dependency>
+```
+
+Then configure `maven-shade-plugin` with `ServicesResourceTransformer`, because the Minecraft version adapters are loaded using `ServiceLoader`.
+
+Full guide: [`docs/SHADING.md`](docs/SHADING.md).

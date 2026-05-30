@@ -3,6 +3,7 @@ package me.mrbast.dadagui.bukkit;
 import me.mrbast.dadagui.api.Gui;
 import me.mrbast.dadagui.api.GuiScope;
 import me.mrbast.dadagui.api.GuiSlot;
+import me.mrbast.dadagui.api.storage.StorageBinding;
 import me.mrbast.dadagui.bukkit.session.BukkitClickContext;
 import me.mrbast.dadagui.bukkit.session.BukkitGuiHolder;
 import me.mrbast.dadagui.bukkit.session.BukkitGuiRenderContext;
@@ -16,11 +17,14 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -56,6 +60,10 @@ public final class BukkitGuiManager implements Listener {
     }
 
     public void unregister() {
+        for (BukkitGuiSession session : sessions.values()) {
+            synchronizeStorage(session);
+            session.gui().onClose(session);
+        }
         HandlerList.unregisterAll(this);
         sessions.clear();
         registered = false;
@@ -64,6 +72,8 @@ public final class BukkitGuiManager implements Listener {
     public BukkitGuiSession open(Player player, Gui<Player, ItemStack> gui) {
         BukkitGuiSession previous = sessions.get(player.getUniqueId());
         if (previous != null) {
+            synchronizeStorage(previous);
+            previous.gui().onClose(previous);
             sessions.remove(player.getUniqueId());
         }
         BukkitGuiSession session = new BukkitGuiSession(this, player, gui, attributesFor(gui));
@@ -81,6 +91,7 @@ public final class BukkitGuiManager implements Listener {
         if (session == null || session.inventory() == null || session.viewer() == null) {
             return;
         }
+        synchronizeStorage(session);
         render(session);
         session.viewer().updateInventory();
     }
@@ -128,8 +139,17 @@ public final class BukkitGuiManager implements Listener {
         BukkitGuiHolder holder = (BukkitGuiHolder) event.getInventory().getHolder();
         BukkitGuiSession session = holder.session();
         int rawSlot = event.getRawSlot();
+        int topSize = event.getInventory().getSize();
 
-        if (rawSlot < 0 || rawSlot >= event.getInventory().getSize()) {
+        if (rawSlot < 0) {
+            event.setCancelled(true);
+            return;
+        }
+
+        if (rawSlot >= topSize) {
+            if (event.isShiftClick()) {
+                event.setCancelled(true);
+            }
             return;
         }
 
@@ -139,8 +159,34 @@ public final class BukkitGuiManager implements Listener {
             return;
         }
 
-        event.setCancelled(slot.cancelClick());
-        slot.click(new BukkitClickContext(session, event));
+        BukkitClickContext clickContext = new BukkitClickContext(session, event);
+        event.setCancelled(slot.shouldCancelClick(clickContext));
+        slot.click(clickContext);
+    }
+
+    @EventHandler
+    public void onDrag(InventoryDragEvent event) {
+        if (!(event.getWhoClicked() instanceof Player)) {
+            return;
+        }
+        if (!(event.getInventory().getHolder() instanceof BukkitGuiHolder)) {
+            return;
+        }
+
+        BukkitGuiHolder holder = (BukkitGuiHolder) event.getInventory().getHolder();
+        BukkitGuiSession session = holder.session();
+        int topSize = event.getInventory().getSize();
+
+        for (Integer rawSlot : event.getRawSlots()) {
+            if (rawSlot == null || rawSlot < 0 || rawSlot >= topSize) {
+                continue;
+            }
+            GuiSlot<Player, ItemStack> slot = session.bindings().get(rawSlot);
+            if (slot == null || !slot.acceptsNativeItemMovement()) {
+                event.setCancelled(true);
+                return;
+            }
+        }
     }
 
     @EventHandler
@@ -155,8 +201,41 @@ public final class BukkitGuiManager implements Listener {
         Player player = (Player) event.getPlayer();
         BukkitGuiSession session = sessions.remove(player.getUniqueId());
         if (session != null) {
+            synchronizeStorage(session);
             session.gui().onClose(session);
             cleanupSharedAttributes(session.gui());
+        }
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        BukkitGuiSession session = sessions.remove(event.getPlayer().getUniqueId());
+        if (session != null) {
+            synchronizeStorage(session);
+            session.gui().onClose(session);
+            cleanupSharedAttributes(session.gui());
+        }
+    }
+
+    private void synchronizeStorage(BukkitGuiSession session) {
+        if (session == null || session.inventory() == null) {
+            return;
+        }
+        Map<String, StorageBinding<Player, ItemStack>> containersToSave = new LinkedHashMap<>();
+        for (Map.Entry<Integer, GuiSlot<Player, ItemStack>> entry : session.bindings().entrySet()) {
+            GuiSlot<Player, ItemStack> slot = entry.getValue();
+            if (slot == null || !slot.acceptsNativeItemMovement()) {
+                continue;
+            }
+            StorageBinding<Player, ItemStack> binding = slot.storageBinding();
+            if (binding == null) {
+                continue;
+            }
+            binding.updateItem(session.inventory().getItem(entry.getKey()));
+            containersToSave.put(binding.storageId(), binding);
+        }
+        for (StorageBinding<Player, ItemStack> binding : containersToSave.values()) {
+            binding.save(session);
         }
     }
 
